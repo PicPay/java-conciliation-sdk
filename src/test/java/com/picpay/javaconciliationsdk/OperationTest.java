@@ -46,6 +46,7 @@ public class OperationTest {
         assertThat(operation.getCurrentState(), is(equalTo(State.ERROR)));
     }
 
+    
     @Test
     public void markAsSendingAfterError(){
         operation.markAsSending();
