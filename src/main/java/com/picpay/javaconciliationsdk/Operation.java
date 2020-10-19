@@ -1,8 +1,8 @@
 package com.picpay.javaconciliationsdk;
 
-import java.math.*;
-import java.time.*;
-import java.util.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 
 public class Operation implements Comparable<Operation> {
 

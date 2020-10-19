@@ -1,6 +1,7 @@
 package com.picpay.javaconciliationsdk;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Iterator;
 
 public enum State {
     ERROR, NEW, SENDING, SENT;

@@ -1,7 +1,7 @@
 package com.picpay.javaconciliationsdk;
 
-import java.util.*;
-import java.util.stream.*;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 public class OutboxMemory implements Outbox {
 
