@@ -1,9 +1,6 @@
 package com.picpay.javaconciliationsdk;
 
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.function.Predicate;
+import java.util.*;
 
 public enum State {
     ERROR, NEW, SENDING, SENT;
@@ -13,6 +10,8 @@ public enum State {
             if(currentState == SENT) return currentState;
             else return nextState;
         }
+        if(currentState == State.ERROR && nextState == State.SENDING) return nextState;
+
         Iterator<State> states = EnumSet.of(NEW, SENDING, SENT).iterator();
         State ret = State.SENT;
         boolean found = false;

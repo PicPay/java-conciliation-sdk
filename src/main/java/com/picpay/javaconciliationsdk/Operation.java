@@ -1,17 +1,20 @@
 package com.picpay.javaconciliationsdk;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import java.math.*;
+import java.time.*;
+import java.util.*;
 
-public class Operation {
+public class Operation implements Comparable<Operation> {
 
     private UUID correlationId;
     private BigDecimal valor;
     private State currentState;
+    private Instant date;
 
-    public Operation(UUID correlationId, BigDecimal valor){
+    public Operation(UUID correlationId, BigDecimal valor, Instant date){
         this.correlationId = correlationId;
         this.valor = valor;
+        this.date = date;
         this.currentState = State.NEW;
     }
 
@@ -37,5 +40,10 @@ public class Operation {
 
     public boolean isUnsent() {
         return currentState.isUnsent();
+    }
+
+    @Override
+    public int compareTo(Operation o) {
+        return date.compareTo(o.date);
     }
 }

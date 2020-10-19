@@ -1,34 +1,32 @@
 package com.picpay.javaconciliationsdk;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.*;
 
-import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.math.*;
+import java.time.*;
+import java.util.*;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.core.Is.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class OutboxMemoryTest {
 
     private Outbox outbox;
     private Operation operation;
-    private Map<UUID, Operation> operations;
+    private Operation anotherOperation;
+    private SortedSet<Operation> operations;
     private Conciliation conciliation;
-    private static final int maxOperationsToPoll = 10;
+    private static final int maxOperationsToPoll = 2;
 
     @BeforeEach
     public void setUp(){
-        operations = new HashMap<>();
-        conciliation = this.conciliation = mock(Conciliation.class);
+        operations = new TreeSet<>();
+        conciliation = mock(Conciliation.class);
         outbox = new OutboxMemory(operations, this.conciliation, maxOperationsToPoll);
-        operation = new Operation(UUID.randomUUID(), BigDecimal.TEN);
+        operation = new Operation(UUID.randomUUID(), BigDecimal.TEN, Instant.now().minusSeconds(2));
+        anotherOperation = new Operation(UUID.randomUUID(), BigDecimal.ONE, Instant.now().minusSeconds(1));
     }
 
     @Test
@@ -36,7 +34,7 @@ public class OutboxMemoryTest {
         when(conciliation.send(operation)).thenReturn(true);
         outbox.send(operation);
 
-        assertThat(operations.containsValue(operation), is(true));
+        assertThat(operations.contains(operation), is(true));
         assertThat(operation.getCurrentState(), is(State.SENT));
     }
 
@@ -45,7 +43,7 @@ public class OutboxMemoryTest {
         when(conciliation.send(operation)).thenReturn(false);
         outbox.send(operation);
 
-        assertThat(operations.containsValue(operation), is(true));
+        assertThat(operations.contains(operation), is(true));
         assertThat(operation.getCurrentState(), is(State.ERROR));
     }
 
@@ -60,7 +58,7 @@ public class OutboxMemoryTest {
     public void whenOutboxContainsOnlySentOperationsItDoesNotSendAnyOperation(){
         operation.markAsSending();
         operation.markAsSent();
-        operations.put(operation.getCID(), operation);
+        operations.add(operation);
 
         outbox.sendUnsentOperations();
 
@@ -68,17 +66,48 @@ public class OutboxMemoryTest {
     }
 
     @Test
-    public void sendUnsentOperations(){
+    public void sendNewOperation(){
+        operations.add(operation);
+        when(conciliation.send(operation)).thenReturn(true);
+        outbox.sendUnsentOperations();
+
+        verify(conciliation).send(operation);
+    }
+
+    @Test
+    public void sendOperationWithErrorWhenSendPreviously(){
+        operation.markErrorSending();
+        operations.add(operation);
+        when(conciliation.send(operation)).thenReturn(true);
 
         outbox.sendUnsentOperations();
 
-        throw new UnsupportedOperationException("Não implementado");
+        verify(conciliation).send(operation);
     }
 
     @Test
     public void getANumberOfOperationsEqualsToTheMaximum(){
+        operations.add(operation);
+        operations.add(anotherOperation);
+
         outbox.sendUnsentOperations();
 
-        throw new UnsupportedOperationException("Não implementado");
+        verify(conciliation).send(operation);
+        verify(conciliation).send(anotherOperation);
+    }
+
+    @Test
+    public void getANumberOfOperationsAboveMaximum_sendOldestOperations(){
+        Operation thirdOperation = new Operation(UUID.randomUUID(), BigDecimal.ONE.add(BigDecimal.TEN), Instant.now());
+
+        operations.add(operation);
+        operations.add(anotherOperation);
+        operations.add(thirdOperation);
+
+        outbox.sendUnsentOperations();
+
+        verify(conciliation).send(operation);
+        verify(conciliation).send(anotherOperation);
+        verify(conciliation, never()).send(thirdOperation);
     }
 }

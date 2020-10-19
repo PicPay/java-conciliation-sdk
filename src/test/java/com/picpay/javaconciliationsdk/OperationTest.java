@@ -1,14 +1,13 @@
 package com.picpay.javaconciliationsdk;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import java.math.*;
+import java.time.*;
+import java.util.*;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 public class OperationTest {
 
@@ -16,7 +15,7 @@ public class OperationTest {
 
     @BeforeEach
     public void setUp(){
-        operation = new Operation(UUID.randomUUID(), BigDecimal.TEN);
+        operation = new Operation(UUID.randomUUID(), BigDecimal.TEN, Instant.now());
     }
 
     @Test
@@ -45,5 +44,14 @@ public class OperationTest {
         operation.markErrorSending();
 
         assertThat(operation.getCurrentState(), is(equalTo(State.ERROR)));
+    }
+
+    @Test
+    public void markAsSendingAfterError(){
+        operation.markAsSending();
+        operation.markErrorSending();
+        operation.markAsSending();
+
+        assertThat(operation.getCurrentState(), is(equalTo(State.SENDING)));
     }
 }

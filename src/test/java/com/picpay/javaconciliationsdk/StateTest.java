@@ -1,13 +1,10 @@
 package com.picpay.javaconciliationsdk;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.Test;
-import org.springframework.util.Assert;
+import org.junit.jupiter.api.*;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StateTest {
 
@@ -16,6 +13,7 @@ public class StateTest {
         assertThat(State.selectNextState(State.NEW, State.SENDING), is(State.SENDING));
         assertThat(State.selectNextState(State.SENDING, State.SENT), is(State.SENT));
         assertThat(State.selectNextState(State.SENT, State.SENT), is(State.SENT));
+        assertThat(State.selectNextState(State.ERROR, State.SENDING), is(State.SENDING));
     }
 
     @Test

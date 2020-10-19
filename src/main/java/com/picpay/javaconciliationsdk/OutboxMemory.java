@@ -1,17 +1,15 @@
 package com.picpay.javaconciliationsdk;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.*;
 
 public class OutboxMemory implements Outbox {
 
-    private Map<UUID, Operation> operations;
+    private SortedSet<Operation> operations;
     private Conciliation conciliation;
     private int maxOperationsToPoll;
 
-    public OutboxMemory(Map<UUID, Operation> operations,
+    public OutboxMemory(SortedSet<Operation> operations,
                         Conciliation conciliation,
                         int maxOperationsToPoll){
         this.operations = operations;
@@ -21,15 +19,14 @@ public class OutboxMemory implements Outbox {
 
     @Override
     public void send(Operation operation) {
-        operation.markAsSending();
         sendToConciliation(operation);
 
-        operations.put(operation.getCID(), operation);
+        operations.add(operation);
     }
 
     @Override
     public void sendUnsentOperations() {
-        operations.values().stream()
+        operations.stream()
                 .filter(o -> o.isUnsent())
                 .collect(Collectors.toList())
                 .stream()
@@ -39,6 +36,7 @@ public class OutboxMemory implements Outbox {
     }
 
     private void sendToConciliation(Operation operation){
+        operation.markAsSending();
         if(conciliation.send(operation)) operation.markAsSent();
         else operation.markErrorSending();
     }
